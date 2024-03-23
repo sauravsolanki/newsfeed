@@ -1,7 +1,13 @@
+from functools import lru_cache
 from typing import Dict
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+from db import MongoDB
+from utils import get_logger, get_config
+
+logger = get_logger()
 
 
 class YouTubeClient:
@@ -9,6 +15,8 @@ class YouTubeClient:
         self.youtube = build(config['YOUTUBE_API_SERVICE_NAME'],
                              config['YOUTUBE_API_VERSION'],
                              developerKey=config['DEVELOPER_KEY'])
+
+        self.database = MongoDB(uri=config['MONGO_URI'])
 
     def parse_for_interested_fields(self, search_result):
         return {
@@ -20,11 +28,12 @@ class YouTubeClient:
             "publishedAt": search_result['snippet']['publishedAt']
         }
 
-    def __search(self, query: str, max_results: int = 100):
+    def __search(self, query: str, publishedAfter: str = None, max_results: int = 100):
         search_response = self.youtube.search().list(
             q=query,
             part='id,snippet',
-            maxResults=max_results
+            maxResults=max_results,
+            publishedAfter=publishedAfter
         ).execute()
 
         videos = []
@@ -34,13 +43,15 @@ class YouTubeClient:
 
         return videos
 
-    def search(self, query: str, max_results: int = 100):
+    def search(self, query: str, publishedAfter: str = None, max_results: int = 100):
         try:
-            return self.__search(query, max_results)
+            return self.__search(query, publishedAfter, max_results)
         except HttpError as e:
             print('An HTTP error %d occurred:\n%s' % (e.resp.status, e.content))
         return []
 
 
-def get_youtube_data():
-    print('get_youtube_data called')
+@lru_cache
+def get_youtube_client():
+    return YouTubeClient(get_config())
+

@@ -15,6 +15,8 @@ services:
       - '8080:8080'
     volumes:
       - ./app:/code
+    env_file:
+      - .env
 
   worker:
     image: fastapi-app
@@ -23,14 +25,16 @@ services:
     command: rq worker --url redis://redis:6379 --with-scheduler
     links:
       - redis
+    env_file:
+      - .env
 
-  scheduler:
-    image: fastapi-app
-    depends_on:
-      - redis
-    command: rqscheduler --interval 10 --host redis --port 6379 --db 0
-    links:
-      - redis
+#  scheduler:
+#    image: fastapi-app
+#    depends_on:
+#      - redis
+#    command: rqscheduler --interval 10 --host redis --port 6379 --db 0
+#    links:
+#      - redis
 
   dashboard:
     build:
