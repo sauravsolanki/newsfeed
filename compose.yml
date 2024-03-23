@@ -18,6 +18,16 @@ services:
     env_file:
       - .env
 
+  data-puller:
+    build:
+      context: ./app
+    image: fastapi-app
+    command: python scheduler.py
+    volumes:
+      - ./app:/code
+    env_file:
+      - .env
+
   worker:
     image: fastapi-app
     depends_on:
