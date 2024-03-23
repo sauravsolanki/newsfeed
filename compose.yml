@@ -1,0 +1,53 @@
+version: '3'
+services:
+  redis:
+    image: redis:4.0.6-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis:/redis
+
+  fastapi-app:
+    build:
+      context: ./app
+    image: fastapi-app
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./app:/code
+
+  worker:
+    image: fastapi-app
+    depends_on:
+      - redis
+    command: rq worker --url redis://redis:6379 --with-scheduler
+    links:
+      - redis
+
+  scheduler:
+    image: fastapi-app
+    depends_on:
+      - redis
+    command: rqscheduler --interval 10 --host redis --port 6379 --db 0
+    links:
+      - redis
+
+  dashboard:
+    build:
+      context: ./redis-dashboard
+    image: redis-dashboard
+    container_name: dashboard
+    ports:
+      - 9181:9181
+    command: rq-dashboard --redis-url=redis://redis:6379
+    depends_on:
+      - redis
+
+#  redisinsight:
+#    image: redislabs/redisinsight:latest
+#    ports:
+#      - '5540:5540'
+#    volumes:
+#      - ./redisinsight:/db
+#    depends_on:
+#      - redis
