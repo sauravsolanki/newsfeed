@@ -20,16 +20,16 @@ services:
 
   data-puller:
     build:
-      context: ./app
-    image: fastapi-app
+      context: ./data-puller
+    image: data-puller
     command: python scheduler.py
     volumes:
-      - ./app:/code
+      - ./data-puller:/code
     env_file:
       - .env
 
   worker:
-    image: fastapi-app
+    image: data-puller
     depends_on:
       - redis
     command: rq worker --url redis://redis:6379 --with-scheduler

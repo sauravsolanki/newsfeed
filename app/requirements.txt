@@ -5,6 +5,4 @@ redis
 requests
 rq >= 0.3.1
 click
-rq-scheduler
 pymongo[srv]
-google-api-python-client

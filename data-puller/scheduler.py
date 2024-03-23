@@ -38,7 +38,7 @@ def main():
     youTubeClientThread = threading.Thread(target=start_sending_data, args=('IPL',))
     youTubeClientThread.start()
 
-    time.sleep(30)
+    time.sleep(300)
 
     stop_fetching_video = True
     youTubeClientThread.join()

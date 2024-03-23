@@ -22,5 +22,6 @@ class MongoDB:
 
     def push_video_data(self, video_data):
         for v in video_data:
-            print('Pushing Data .... ')
             self.database['video'].insert_one(v)
+        print('Pushed Data .... ')
+

@@ -2,18 +2,13 @@ import json
 
 from bson import json_util
 from fastapi import FastAPI, Request
-from rq import Queue
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
-import redis
-from db import MongoDB
 from utils import get_config, get_logger
 
 # env variable
 config = get_config()
-
-# redis
-r = redis.Redis(host='redis', port=6379, db=0)
-queue = Queue(connection=r)
 
 logger = get_logger()
 
@@ -22,8 +17,8 @@ app = FastAPI()
 
 @app.on_event("startup")
 async def startup_event():
-    mongoDB = MongoDB(uri=config['MONGO_URI'])
-    app.state.mongoDB = mongoDB.database
+    client = MongoClient(config['MONGO_URI'], server_api=ServerApi('1'))
+    app.state.mongoDB = client['newsfeeds']
 
 
 @app.on_event("shutdown")
