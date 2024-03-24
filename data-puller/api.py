@@ -1,3 +1,4 @@
+import json
 from functools import lru_cache
 from typing import Dict
 
@@ -12,11 +13,21 @@ logger = get_logger()
 
 class YouTubeClient:
     def __init__(self, config: Dict):
+        self.config = config
+        self.api_version = 1
         self.youtube = build(config['YOUTUBE_API_SERVICE_NAME'],
                              config['YOUTUBE_API_VERSION'],
-                             developerKey=config['DEVELOPER_KEY'])
+                             developerKey=config[f'DEVELOPER_KEY{self.api_version}'])
 
         self.database = MongoDB(uri=config['MONGO_URI'])
+
+    def rebuild(self):
+        self.api_version += 1
+        if self.api_version == 6:
+            raise NotImplemented('API Key Exhausted')
+        self.youtube = build(self.config['YOUTUBE_API_SERVICE_NAME'],
+                             self.config['YOUTUBE_API_VERSION'],
+                             developerKey=self.config[f'DEVELOPER_KEY{(self.api_version)}'])
 
     def parse_for_interested_fields(self, search_result):
         return {
@@ -48,10 +59,15 @@ class YouTubeClient:
             return self.__search(query, publishedAfter, max_results)
         except HttpError as e:
             print('An HTTP error %d occurred:\n%s' % (e.resp.status, e.content))
+            error_message = json.loads(e.content.decode())
+            if 'error' in error_message:
+                print(error_message['error']['message'])
+                self.rebuild()
+        except NotImplemented as e:
+            print(e)
         return []
 
 
 @lru_cache
 def get_youtube_client():
     return YouTubeClient(get_config())
-

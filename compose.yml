@@ -18,15 +18,15 @@ services:
     env_file:
       - .env
 
-  data-puller:
-    build:
-      context: ./data-puller
-    image: data-puller
-    command: python scheduler.py
-    volumes:
-      - ./data-puller:/code
-    env_file:
-      - .env
+#  data-puller:
+#    build:
+#      context: ./data-puller
+#    image: data-puller
+#    command: python scheduler.py
+#    volumes:
+#      - ./data-puller:/code
+#    env_file:
+#      - .env
 
   worker:
     image: data-puller
@@ -38,13 +38,25 @@ services:
     env_file:
       - .env
 
-#  scheduler:
-#    image: fastapi-app
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app/
 #    depends_on:
-#      - redis
-#    command: rqscheduler --interval 10 --host redis --port 6379 --db 0
-#    links:
-#      - redis
+#      - fastapi-app
+    env_file:
+      - .env
+
+  #  scheduler:
+  #    image: fastapi-app
+  #    depends_on:
+  #      - redis
+  #    command: rqscheduler --interval 10 --host redis --port 6379 --db 0
+  #    links:
+  #      - redis
 
   dashboard:
     build:

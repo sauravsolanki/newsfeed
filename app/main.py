@@ -2,6 +2,7 @@ import json
 
 from bson import json_util
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
@@ -13,6 +14,15 @@ config = get_config()
 logger = get_logger()
 
 app = FastAPI()
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
@@ -32,16 +42,16 @@ def read_root():
 
 
 @app.get("/list")
-def read_root(request: Request, page: int, page_limit: int):
+def list_videos(request: Request, page: int, page_limit: int):
     # Fetching books data and paginating
-    fetch_books = request.app.state.mongoDB['video'].find().sort('_id', -1).skip(page_limit * (page - 1)).limit(
+    videos_datalist = request.app.state.mongoDB['video'].find().sort('_id', -1).skip(page_limit * (page - 1)).limit(
         page_limit)
 
-    books_fetched = list(json.loads(json_util.dumps(fetch_books)))
+    videos_datalist = list(json.loads(json_util.dumps(videos_datalist)))
 
     data = {'page': page,
             'showing': page_limit,
-            'books': books_fetched}
+            'videos': videos_datalist}
 
     return data
 
@@ -54,14 +64,13 @@ def search_video(request: Request, title: str, description: str = '', page: int 
     if description:
         search_criteria["description"] = {'$regex': f'{description}', '$options': 'i'}
 
-    fetch_books = request.app.state.mongoDB['video'].find(search_criteria).sort('_id', -1).skip(
+    video_datalist = request.app.state.mongoDB['video'].find(search_criteria).sort('_id', -1).skip(
         page_limit * (page - 1)).limit(
         page_limit)
 
-    books_fetched = list(json.loads(json_util.dumps(fetch_books)))
+    video_datalist = list(json.loads(json_util.dumps(video_datalist)))
 
     data = {'page': page,
             'showing': page_limit,
-            'books': books_fetched}
-
+            'videos': video_datalist}
     return data
