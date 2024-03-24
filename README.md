@@ -9,7 +9,7 @@ This repo demonstrates:
 
 
 ### Images 
-![image](docs/screenshots/Screenshot from 2024-03-25 02-37-36.png)
+![image](docs/screenshots/frontend.png)
 
 [Please checkout More here: ](./docs/screenshots/)
 
